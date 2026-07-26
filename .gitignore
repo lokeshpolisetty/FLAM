@@ -1,0 +1,19 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# SQLite database files (runtime artifacts)
+*.db
+*.db-shm
+*.db-wal
+
+# Test artifacts
+.pytest_cache/
+.coverage
+
+# macOS metadata
+.DS_Store
