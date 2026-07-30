@@ -1,5 +1,4 @@
+# Runtime dependencies. Development and test dependencies are in requirements-dev.txt.
 # Typer 0.12.x relies on Click's pre-8.2 help-rendering API.
 typer>=0.12,<0.16
 click>=8.1,<8.2
-pytest>=7.0
-psutil>=5.9

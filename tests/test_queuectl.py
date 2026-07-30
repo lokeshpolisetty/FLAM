@@ -19,7 +19,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 def run(args, env, timeout=10):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
@@ -43,7 +43,7 @@ def list_jobs(env, state=None):
 def start_worker(env, count=1, logfile=None):
     f = open(logfile, "w") if logfile else subprocess.DEVNULL
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=f, stderr=subprocess.STDOUT, env=env,
     )
 
