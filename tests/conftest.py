@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP_MOD = [sys.executable, "-m", "queuectl.cli.entrypoint"]
+APP_MOD = [sys.executable, "-m", "queuectl"]
 
 
 def run(args, env, timeout=15):

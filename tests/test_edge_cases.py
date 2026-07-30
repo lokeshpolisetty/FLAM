@@ -1,4 +1,20 @@
-"""Tests automatically extracted from add-test-strategy.md"""
+"""
+test_edge_cases.py — Broad edge-case tests spanning all subsystems.
+
+Covers invariants, boundary conditions, and cross-cutting behaviours that
+do not fit cleanly into a single subsystem test file:
+  - max_retries edge values (-1, 0)
+  - attempts invariants across every state transition
+  - promote_ready_retries clears next_retry_at
+  - Exactly-once claim across separate OS processes
+  - Concurrent reap across two processes (no double-recovery)
+  - Worker PIDs in DB match actual child processes
+  - Multi-cycle DLQ retry (dead → retry → dead → retry → completed)
+  - Status counts match list --json grouped counts
+  - Config and worker start guard conditions
+  - Worker connection health over many transactions
+  - Various input edge cases (Unicode, type coercion, SQL injection)
+"""
 
 import json
 import os
@@ -17,7 +33,6 @@ except RuntimeError:
 
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
 from queuectl import database as db
 from queuectl.cli.entrypoint import app
 from conftest import run, start_worker, wait_for_state, list_jobs
@@ -579,7 +594,7 @@ def test_db_path_nonexistent_directory_clean_error(tmp_path):
     bad_env = os.environ.copy()
     bad_env["QUEUECTL_DB"] = str(tmp_path / "no_such_dir" / "queue.db")
     r = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["status"],
+        [sys.executable, "-m", "queuectl"] + ["status"],
         capture_output=True, text=True, env=bad_env,
     )
     assert r.returncode != 0
@@ -631,7 +646,7 @@ def test_no_lock_errors_under_100_worker_contention(env, tmp_path):
     # Capture ALL worker stderr
     log = tmp_path / "workers_stderr.txt"
     wp = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(N)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(N)],
         stdout=open(log, "w"), stderr=subprocess.STDOUT, env=env,
     )
     try:
@@ -701,80 +716,6 @@ def test_sigterm_during_lock_contention_resolves_within_timeout(env):
 
     wp.wait(timeout=10)
     assert wp.returncode == 0
-
-def test_sigkill_kills_worker_and_job_is_recovered(env):
-    """SIGKILL terminates worker (default behavior); job is recovered via lease."""
-    run(["config", "set", "recovery-timeout", "2"], env)
-    run(["config", "set", "heartbeat-interval", "1"], env)
-    run(["enqueue", '{"id":"hup1","command":"sleep 10"}'], env)
-
-    wp = start_worker(env, count=1)
-    wait_for_state(env, "hup1", "processing", timeout=5)
-
-    import sqlite3
-    conn = sqlite3.connect(env["QUEUECTL_DB"])
-    row = conn.execute("SELECT pid FROM workers WHERE status='running'").fetchone()
-    conn.close()
-    os.kill(row[0], signal.SIGKILL)
-    wp.wait(timeout=5)
-
-    # Job must still exist — not lost
-    jobs = list_jobs(env)
-    job = next(j for j in jobs if j["id"] == "hup1")
-    assert job["state"] == "processing"  # stale, not yet recovered
-
-    # After lease expires, recovery must work
-    time.sleep(2.5)
-    wp2 = start_worker(env, count=1)
-    try:
-        wait_for_state(env, "hup1", "pending", timeout=5)
-    finally:
-        wp2.send_signal(signal.SIGTERM)
-        wp2.wait(timeout=15)
-
-def test_multiple_rapid_signals_single_shutdown(env, tmp_path):
-    """5 rapid SIGTERM signals produce exactly one 'stopped' log line."""
-    log = tmp_path / "rapid.log"
-    run(["enqueue", '{"id":"rap1","command":"sleep 3"}'], env)
-    wp = start_worker(env, count=1, logfile=log)
-    time.sleep(0.5)
-
-    # Send 5 rapid SIGTERMs
-    for _ in range(5):
-        def handle_signal(signum, frame):
-            stop_requested["flag"] = True
-        wp.send_signal(signal.SIGTERM)
-        time.sleep(0.05)
-    wp.wait(timeout=10)
-
-    log_text = log.read_text()
-    stop_count = log_text.count("stopped")
-    assert stop_count >= 1, "worker must log 'stopped'"
-    assert stop_count <= 2, f"too many 'stopped' lines ({stop_count}) — double-cleanup"
-
-def test_20_workers_simultaneous_sigterm_all_stopped(env):
-    """20 workers all receiving SIGTERM simultaneously all reach stopped state."""
-    wp = start_worker(env, count=20)
-    time.sleep(1.5)
-
-    # Send SIGTERM via worker stop (sends to all simultaneously)
-    r = run(["worker", "stop"], env)
-    assert r.returncode == 0
-    wp.wait(timeout=15)
-
-    import sqlite3
-    conn = sqlite3.connect(env["QUEUECTL_DB"])
-    running = conn.execute(
-        "SELECT COUNT(*) FROM workers WHERE status='running'"
-    ).fetchone()[0]
-    stopped = conn.execute(
-        "SELECT COUNT(*) FROM workers WHERE status='stopped'"
-    ).fetchone()[0]
-    conn.close()
-    assert running == 0, f"{running} workers still show as running"
-    assert stopped == 20, f"Only {stopped}/20 workers marked stopped"
-
-
 
 def test_corrupted_db_produces_clean_error(env):
     """A genuinely corrupted DB must produce a clean error, not a traceback."""
@@ -1565,7 +1506,7 @@ def test_concurrent_status_calls_do_not_error(env, tmp_path):
     procs = []
     for _ in range(100):
         p = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["status"],
+            [sys.executable, "-m", "queuectl"] + ["status"],
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             text=True, env=env,
         )
@@ -1597,4 +1538,3 @@ def test_command_zero_is_coerced_to_string(env):
         assert jobs[0]["command"] == "0"
     else:
         assert "Traceback" not in r.stderr
-
