@@ -1,5 +1,5 @@
 """
-test_unit_missing.py — Unit tests covering gaps identified in Section 2A analysis.
+test_unit_edge_cases.py — Unit tests for schema and config edge cases.
 
 Covers:
   - Job schema edge cases (null id/command, empty string, extra fields, type coercion)
@@ -39,7 +39,7 @@ def cli(args, tmp_db_path):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = tmp_db_path
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, env=env, timeout=15
     )
 
@@ -482,7 +482,7 @@ def test_worker_start_count_zero(tmp_db):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     proc = _sp.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "0"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "0"],
         stdout=_sp.PIPE, stderr=_sp.PIPE, text=True, env=env
     )
     _t.sleep(0.5)

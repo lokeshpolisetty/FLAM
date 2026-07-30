@@ -1,9 +1,9 @@
 """
-test_component_strategy.py — Component tests covering Section 2.B of test_strategy.md.
+test_component_db.py — Component tests for individual subsystems with real SQLite storage.
 
-Targets individual subsystems with real SQLite storage:
+Targets each subsystem in isolation:
 - Storage layer atomic update/claim
-- Worker loop behavior
+- Worker loop behaviour
 - Signal handling logic
 - Worker registry/discovery mechanism
 - Retry scheduler / delayed requeue logic
