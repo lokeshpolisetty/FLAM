@@ -68,7 +68,7 @@ def env(tmp_path):
 
 
 # ===========================================================================
-# Section 2D — SIGHUP behavior
+# --- SIGHUP behaviour ---
 # ===========================================================================
 
 def test_sighup_does_not_crash_worker(env):
@@ -153,7 +153,7 @@ def test_sighup_worker_continues_processing_job(env, tmp_path):
 
 
 # ===========================================================================
-# Section 2D — Environment variable expansion in commands
+# --- Environment variable expansion in commands ---
 # ===========================================================================
 
 def test_env_variable_home_expanded_at_execution(env, tmp_path):
@@ -188,7 +188,7 @@ def test_env_variable_path_used_at_execution(env, tmp_path):
 
 
 # ===========================================================================
-# Section 2D — bash -c multi-statement
+# --- bash -c multi-statement commands ---
 # ===========================================================================
 
 def test_bash_c_multi_statement_command(env, tmp_path):
@@ -223,7 +223,7 @@ def test_bash_c_conditional_logic_executes(env, tmp_path):
 
 
 # ===========================================================================
-# Section 2D — Command stderr does not interfere with CLI stdout
+# --- Command stderr isolation from CLI stdout ---
 # ===========================================================================
 
 def test_command_stderr_does_not_pollute_list_json(env):
@@ -261,7 +261,7 @@ def test_large_stdout_command_does_not_corrupt_list_json(env):
 
 
 # ===========================================================================
-# Section 2D — BOM not present in CLI output
+# --- BOM not present in CLI output ---
 # ===========================================================================
 
 def test_no_bom_in_list_json_output(env):
@@ -287,7 +287,7 @@ def test_no_bom_in_dlq_list_output(env):
 
 
 # ===========================================================================
-# Section 2C — dlq retry → new failure cycle
+# --- DLQ retry cycle ---
 # ===========================================================================
 
 def test_dlq_retry_then_new_failure_goes_dead_again(env):
@@ -348,7 +348,7 @@ def test_dlq_retry_then_success(env):
 
 
 # ===========================================================================
-# Section 2D — config get output determinism
+# --- Config get output determinism ---
 # ===========================================================================
 
 def test_config_get_all_output_is_deterministic(env):
@@ -370,7 +370,7 @@ def test_config_get_all_contains_equals_separator(env):
 
 
 # ===========================================================================
-# Section 2C — Multiple jobs enqueued before worker starts
+# --- Multiple jobs enqueued before worker starts ---
 # ===========================================================================
 
 def test_multiple_jobs_before_worker_all_processed(env):
@@ -402,7 +402,7 @@ def test_multiple_jobs_before_worker_all_processed(env):
 
 
 # ===========================================================================
-# Section 2C — Worker restart between retries
+# --- Worker restart between retries ---
 # ===========================================================================
 
 def test_worker_restart_between_retries_still_fires(env):
@@ -450,7 +450,7 @@ def test_worker_restart_between_retries_still_fires(env):
 
 
 # ===========================================================================
-# Section 2D — retry timing accuracy
+# --- Retry timing accuracy ---
 # ===========================================================================
 
 def test_retry_timing_accuracy(env):
@@ -483,7 +483,7 @@ def test_retry_timing_accuracy(env):
 
 
 # ===========================================================================
-# Section 2D — error to stderr, not stdout
+# --- Errors go to stderr, not stdout ---
 # ===========================================================================
 
 def test_error_messages_only_on_stderr(env):

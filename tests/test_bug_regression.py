@@ -1,6 +1,6 @@
 """
-test_bug_regression.py — Regression tests for confirmed code bugs and
-production-critical gaps identified in the deep-dive analysis.
+test_bug_regression.py — Regression tests for confirmed bugs and
+production-critical correctness issues.
 
 BUG-1  promote_ready_retries did not clear next_retry_at → promoted jobs
        kept stale scheduling data.
@@ -11,11 +11,10 @@ BUG-3  execute_job heartbeat call was unguarded → a transient DB write failure
 BUG-4  heartbeat_at was absent from _job_to_public_dict → list --json schema
        was incomplete.
 
-Production gaps:
-  GAP-5  heartbeat-interval >= recovery-timeout → healthy workers reaped.
-  GAP-6  execute_job did not kill child process group → orphan subprocesses
-         after worker SIGKILL.
-  GAP-7  subprocess stdout=PIPE with large output blocks the pipe buffer.
+GAP-5  heartbeat-interval >= recovery-timeout → healthy workers reaped.
+GAP-6  execute_job did not kill child process group → orphan subprocesses
+       after worker SIGKILL.
+GAP-7  subprocess stdout=PIPE with large output blocks the pipe buffer.
 """
 
 import json

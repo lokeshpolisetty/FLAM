@@ -45,7 +45,7 @@ def cli(args, tmp_db_path):
 
 
 # ============================================================================
-# Section 2A-1: Job Schema Edge Cases
+# --- Schema edge cases ---
 # ============================================================================
 
 def test_schema_null_id_rejected(tmp_db):
@@ -139,7 +139,7 @@ def test_schema_json_null_rejected(tmp_db):
 
 
 # ============================================================================
-# Section 2A-2: Max Retries — Type Coercion and Boundary
+# --- Max retries: type coercion and boundary ---
 # ============================================================================
 
 def test_max_retries_as_integer_in_payload(tmp_db):
@@ -193,7 +193,7 @@ def test_attempts_always_non_negative(tmp_db):
 
 
 # ============================================================================
-# Section 2A-3: Backoff Formula Edge Cases
+# --- Backoff formula edge cases ---
 # ============================================================================
 
 def test_backoff_base_zero_produces_zero_delay(tmp_db):
@@ -304,7 +304,7 @@ def test_backoff_formula_parametrized(tmp_db, base, attempts, expected):
 
 
 # ============================================================================
-# Section 2A-4: Config Edge Cases
+# --- Config edge cases ---
 # ============================================================================
 
 def test_config_unknown_key_stored_without_type_validation(tmp_db):
@@ -380,7 +380,7 @@ def test_config_set_invalid_float_exits_nonzero(tmp_db):
 
 
 # ============================================================================
-# Section 2A-5: Heartbeat / Worker Field Null Invariants
+# --- Heartbeat and worker field null invariants ---
 # ============================================================================
 
 def test_heartbeat_at_null_for_pending_job(tmp_db):
@@ -471,7 +471,7 @@ def test_next_retry_at_null_for_dead_job(tmp_db):
 
 
 # ============================================================================
-# Section 2A-6: CLI Argument Parsing Edge Cases
+# --- CLI argument parsing edge cases ---
 # ============================================================================
 
 def test_worker_start_count_zero(tmp_db):
