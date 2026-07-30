@@ -52,7 +52,7 @@ def test_cc02_parallel_enqueue(env):
     num_parallel = 20
     for i in range(num_parallel):
         p = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue", json.dumps({"id": f"par-{i}", "command": f"echo {i}"})],
+            [sys.executable, "-m", "queuectl"] + ["enqueue", json.dumps({"id": f"par-{i}", "command": f"echo {i}"})],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, text=True
         )
         procs.append(p)
