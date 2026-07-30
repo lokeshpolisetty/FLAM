@@ -1,10 +1,10 @@
 """
-test_component_deep.py — Deep Component tests covering Section 2.B of test_strategy.md.
+test_component_deep.py — Deep component tests for the storage layer and worker subsystem.
 
 Tests each subsystem in isolation with real SQLite storage:
   1. Storage layer atomic update/claim (TOCTOU safety, WAL mode, busy_timeout)
-  2. Worker loop behavior with stubbed command execution
-  3. Signal handler behavior
+  2. Worker loop behaviour with stubbed command execution
+  3. Signal handler behaviour
   4. Worker registry/discovery mechanism
   5. Retry scheduler / delayed requeue logic
   6. DLQ storage and retrieval
@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
 from queuectl import database as db
 from queuectl.config import settings as config_service
 
@@ -390,7 +389,7 @@ def test_dlq_list_json_empty_array_when_no_dead_jobs(tmp_path, monkeypatch):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db_file
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["dlq", "list", "--json"],
+        [sys.executable, "-m", "queuectl"] + ["dlq", "list", "--json"],
         capture_output=True, text=True, env=env
     )
     import json
@@ -411,7 +410,7 @@ def test_dlq_list_json_contains_all_required_fields(conn):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["dlq", "list", "--json"],
+        [sys.executable, "-m", "queuectl"] + ["dlq", "list", "--json"],
         capture_output=True, text=True, env=env
     )
     assert res.returncode == 0
@@ -435,7 +434,7 @@ def test_dlq_retry_moves_dead_to_pending_resets_attempts(conn):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["dlq", "retry", "d1"],
+        [sys.executable, "-m", "queuectl"] + ["dlq", "retry", "d1"],
         capture_output=True, text=True, env=env
     )
     assert res.returncode == 0
@@ -452,7 +451,7 @@ def test_dlq_retry_on_non_dead_job_exits_nonzero(conn):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["dlq", "retry", "p1"],
+        [sys.executable, "-m", "queuectl"] + ["dlq", "retry", "p1"],
         capture_output=True, text=True, env=env
     )
     assert res.returncode != 0
@@ -464,7 +463,7 @@ def test_dlq_retry_on_nonexistent_id_exits_nonzero(conn):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["dlq", "retry", "does-not-exist"],
+        [sys.executable, "-m", "queuectl"] + ["dlq", "retry", "does-not-exist"],
         capture_output=True, text=True, env=env
     )
     assert res.returncode != 0
@@ -482,11 +481,11 @@ def test_dlq_retry_idempotent_second_call_fails(conn):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     for _ in [1, 2]:
-        subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint", "dlq", "retry", "d1"],
+        subprocess.run([sys.executable, "-m", "queuectl", "dlq", "retry", "d1"],
                        capture_output=True, text=True, env=env)
     # Second call: job is now pending, not dead
     res2 = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["dlq", "retry", "d1"],
+        [sys.executable, "-m", "queuectl"] + ["dlq", "retry", "d1"],
         capture_output=True, text=True, env=env
     )
     assert res2.returncode != 0
@@ -539,11 +538,11 @@ def test_config_snapshot_on_enqueue(tmp_path, monkeypatch):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db_file
 
-    subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint"] + ["config", "set", "max-retries", "9"],
+    subprocess.run([sys.executable, "-m", "queuectl"] + ["config", "set", "max-retries", "9"],
                    capture_output=True, text=True, env=env)
-    subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint"] + ["config", "set", "backoff-base", "4.5"],
+    subprocess.run([sys.executable, "-m", "queuectl"] + ["config", "set", "backoff-base", "4.5"],
                    capture_output=True, text=True, env=env)
-    subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue", '{"id":"snap1","command":"echo hi"}'],
+    subprocess.run([sys.executable, "-m", "queuectl"] + ["enqueue", '{"id":"snap1","command":"echo hi"}'],
                    capture_output=True, text=True, env=env)
 
     c = db.get_connection()

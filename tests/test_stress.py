@@ -1,7 +1,7 @@
 """
-test_nonfunctional_missing.py — Non-functional gaps from Section 2E analysis.
+test_stress.py — Stress and non-functional gap tests.
 
-Missing areas:
+Covers scenarios requiring either high job counts or unusual system conditions:
   - 100+ worker contention (stress)
   - 500 job stress enqueue + process
   - Read-only DB error handling
@@ -25,19 +25,18 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 
 def cli(args, env, timeout=60):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
 
 def worker_proc(env, count=1):
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
     )
 
@@ -181,7 +180,7 @@ def test_readonly_db_worker_exits_gracefully(tmp_path):
 
     try:
         proc = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env
         )
         proc.wait(timeout=8)
