@@ -23,22 +23,22 @@ isolates each test run).
 ## Usage
 
 ```bash
-# Add jobs
-python3 app.py enqueue '{"id":"job1","command":"sleep 2"}'
-python3 app.py enqueue '{"id":"job2","command":"exit 1","max_retries":2}'
+# Add jobs (``python3 app.py`` remains supported as a convenience wrapper)
+python -m queuectl enqueue '{"id":"job1","command":"sleep 2"}'
+python -m queuectl enqueue '{"id":"job2","command":"exit 1","max_retries":2}'
 
 # Start 3 workers in the foreground (open another terminal for the rest)
-python3 app.py worker start --count 3
+python -m queuectl worker start --count 3
 
 # From a different terminal:
-python3 app.py status
-python3 app.py list --state pending
-python3 app.py list --state pending --json
-python3 app.py dlq list
-python3 app.py dlq retry job2
-python3 app.py config set max-retries 3
-python3 app.py config set backoff-base 2
-python3 app.py worker stop        # graceful stop, from any terminal
+python -m queuectl status
+python -m queuectl list --state pending
+python -m queuectl list --state pending --json
+python -m queuectl dlq list
+python -m queuectl dlq retry job2
+python -m queuectl config set max-retries 3
+python -m queuectl config set backoff-base 2
+python -m queuectl worker stop        # graceful stop, from any terminal
 ```
 
 `Ctrl+C` (SIGINT) or `SIGTERM` on the `worker start` process also
@@ -55,13 +55,13 @@ full walkthrough.
 ## Architecture
 
 ```
-app.py             Typer CLI: enqueue / worker start|stop / status /
+app.py              Convenience wrapper for the CLI
+queuectl/cli/       Typer CLI: enqueue / worker start|stop / status /
                     list / dlq list|retry / config set|get
-worker.py           Worker process main loop + job execution + signal
-                    handling
-db.py               SQLite schema, atomic job claim, crash recovery
-                    (reap_stale_jobs), retry promotion, worker registry
-config_service.py   Read/write the `config` table
+queuectl/worker/    Worker process main loop + job execution + signal handling
+queuectl/database/  SQLite schema, atomic job claim, crash recovery,
+                    retry promotion, and worker registry
+queuectl/config/    Read/write the `config` table
 tests/              Black-box pytest suite that drives the real CLI as
                     subprocesses, exactly like the grader's script will
 ```
@@ -114,7 +114,7 @@ enqueue time** — changing them only affects jobs created afterward. See
 ## Testing
 
 ```bash
-python3 -m pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
 The suite is black-box: it shells out to `app.py` exactly as a real user
