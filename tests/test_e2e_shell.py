@@ -1,5 +1,5 @@
 """
-test_e2e_shell.py — End-to-end tests covering Section 2.D of test_strategy.md.
+test_e2e_shell.py — End-to-end CLI and shell-integration tests.
 
 Drives the real CLI binary as subprocesses exactly as a reviewer would.
 Every test uses real OS signals, real shell commands, and real file-system
@@ -25,7 +25,6 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 
 # ---------------------------------------------------------------------------
@@ -34,7 +33,7 @@ APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 def cli(args, env, timeout=20):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
@@ -43,7 +42,7 @@ def worker_proc(env, count=1, capture=False):
     stdout = subprocess.PIPE if capture else subprocess.DEVNULL
     stderr = subprocess.PIPE if capture else subprocess.DEVNULL
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=stdout, stderr=stderr, env=env,
     )
 
