@@ -23,9 +23,9 @@ htmlcov/
 # macOS metadata
 .DS_Store
 
-# Quarantined files: one-off scripts and AI-generated strategy documents.
-# These are preserved for historical reference only; see docs/ for contents.
+# docs/ — one-off dev scripts, AI-generated strategy documents, coverage reports.
+# Preserved locally for reference; not part of the published source tree.
 docs/
 
-# Backup folder: holds compatibility shims and temporary refactoring scripts.
+# backup/ — compatibility shims and temporary refactoring scripts used during development.
 backup/

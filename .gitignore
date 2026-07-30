@@ -17,3 +17,7 @@ venv/
 
 # macOS metadata
 .DS_Store
+
+# Repository initialisation script — used only to seed the local git history.
+# Not part of the published project source.
+init_git_history.sh
