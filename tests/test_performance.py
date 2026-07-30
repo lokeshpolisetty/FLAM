@@ -1,9 +1,8 @@
 """
-test_performance.py — Performance and latency tests covering Section 2.E (Performance)
-of test_strategy.md.
+test_performance.py — Performance and latency tests.
 
-These are sanity-floor tests, not hard benchmarks.  Each asserts a generous
-lower bound that any correct single-machine implementation should satisfy.
+Sanity-floor tests, not hard benchmarks. Each asserts a generous lower bound
+that any correct single-machine implementation should satisfy.
 
 Focus areas:
   PERF-1  Enqueue throughput  (sequential and parallel)
@@ -27,19 +26,18 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 
 def cli(args, env, timeout=30):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
 
 def worker_proc(env, count=1):
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
     )
 
@@ -94,7 +92,7 @@ def test_perf_parallel_enqueue_all_succeed(env):
     procs = []
     for i in range(20):
         p = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue",
+            [sys.executable, "-m", "queuectl"] + ["enqueue",
              json.dumps({"id": f"par-{i}", "command": "echo hi"})],
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, env=env,
         )
@@ -249,7 +247,7 @@ def test_perf_list_json_1000_rows_under_5s(env):
 
     # initialise schema first
     subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["status"],
+        [sys.executable, "-m", "queuectl"] + ["status"],
         capture_output=True, env=env,
     )
     conn = sqlite3.connect(env["QUEUECTL_DB"])
@@ -276,7 +274,7 @@ def test_perf_list_json_1000_rows_under_5s(env):
 def test_perf_status_1000_rows_under_5s(env):
     """status with 1000 jobs in DB completes in under 5 s."""
     # Re-use DB seeded in previous style
-    subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint"] + ["status"],
+    subprocess.run([sys.executable, "-m", "queuectl"] + ["status"],
                    capture_output=True, env=env)
     conn = sqlite3.connect(env["QUEUECTL_DB"])
     ts = "2025-01-01T00:00:00+00:00"

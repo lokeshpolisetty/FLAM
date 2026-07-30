@@ -1,7 +1,8 @@
 """
-test_advanced_suite.py — Advanced test suite for queuectl.
+test_lifecycle.py — Integration tests covering the full job lifecycle
+under real OS conditions.
 
-Covers all 18 categories from the Requirement Traceability Matrix and PDF specs:
+Covers:
 - CLI contract & JSON stdout purity
 - Atomic process claiming & concurrency (exactly-once execution)
 - SIGKILL crash recovery (< 60s)
@@ -27,10 +28,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-# Ensure app modules can be imported
-
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from queuectl import database as db
 from queuectl.config import settings as config_service
 
@@ -50,7 +48,7 @@ def run_cli(*args, db_file=None, check=True):
     env = os.environ.copy()
     if db_file:
         env["QUEUECTL_DB"] = db_file
-    cmd = [sys.executable, "-m", "queuectl.cli.entrypoint"] + list(args)
+    cmd = [sys.executable, "-m", "queuectl"] + list(args)
     proc = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if check and proc.returncode != 0:
         raise RuntimeError(f"CLI command failed ({proc.returncode}): {proc.stderr}\nstdout: {proc.stdout}")
@@ -117,7 +115,7 @@ def test_adv_atomic_claiming_across_processes(tmp_db):
 
     # Start worker process pool in foreground mode via worker start --count 5
     worker_proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "5"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "5"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
@@ -177,7 +175,7 @@ def test_adv_sigkill_crash_recovery(tmp_db):
     env["QUEUECTL_DB"] = tmp_db
 
     worker_proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "1"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
@@ -216,7 +214,7 @@ def test_adv_sigkill_crash_recovery(tmp_db):
 
     # Start a NEW worker to trigger recovery and complete the job
     new_worker = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "1"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
@@ -252,7 +250,7 @@ def test_adv_cross_terminal_worker_stop(tmp_db):
 
     # Launch worker start in separate process
     proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "3"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "3"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
@@ -433,7 +431,7 @@ def test_adv_security_and_unicode_handling(tmp_db):
     env["QUEUECTL_DB"] = tmp_db
 
     worker_proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "1"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
@@ -485,7 +483,7 @@ def test_adv_chaos_worker_crash_resilience(tmp_db):
     # Chaos loop: start workers, let them pick up jobs, kill them, repeat
     for wave in range(3):
         w_proc = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "3"],
+            [sys.executable, "-m", "queuectl", "worker", "start", "--count", "3"],
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
@@ -508,7 +506,7 @@ def test_adv_chaos_worker_crash_resilience(tmp_db):
 
     # Allow a final stable worker run to clean up and finish all jobs
     stable_worker = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", "3"],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", "3"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
