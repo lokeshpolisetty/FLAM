@@ -1,6 +1,5 @@
 """
-test_resource.py — Resource exhaustion and cleanup tests covering Section 2.E
-(Resource exhaustion and cleanup) of test_strategy.md.
+test_resource.py — Resource exhaustion and cleanup tests.
 
 Focus areas:
   RES-1  File-descriptor leak check after many job completions
@@ -26,19 +25,18 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 
 def cli(args, env, timeout=20):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
 
 def worker_proc(env, count=1):
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
     )
 

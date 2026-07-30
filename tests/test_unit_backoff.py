@@ -1,15 +1,15 @@
 """
-test_unit_comprehensive.py — Complete unit test coverage for all db.py functions.
+test_unit_backoff.py — Focused unit tests for backoff and invariant behaviour.
 
-Covers Category A gaps from add-test-strategy.md:
-  A.1 - Backoff first-failure delay is base^1, not base^0
-  A.2 - backoff_base=0 produces valid timestamp, not crash
-  A.3 - backoff_base overflow clamping to 30 days
-  A.4 - now_iso() always produces UTC-aware timestamps
-  A.5 - max_retries=-1 behavior (every failure → dead immediately)
-  A.6 - attempts invariants across all state transitions
-  A.7 - promote_ready_retries clears next_retry_at
-  A.8 - dlq retry clears heartbeat_at
+Covers:
+  - Backoff first-failure delay is base^1, not base^0
+  - backoff_base=0 produces a valid timestamp (zero-delay, not a crash)
+  - backoff_base overflow clamping to 30 days
+  - now_iso() always produces UTC-aware timestamps
+  - max_retries=-1 behaviour (every failure → dead immediately)
+  - attempts invariants across all state transitions
+  - promote_ready_retries clears next_retry_at
+  - dlq retry clears heartbeat_at
 """
 
 import os
@@ -22,7 +22,6 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
 
 from queuectl import database as db
 
