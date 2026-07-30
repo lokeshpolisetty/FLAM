@@ -1,12 +1,12 @@
 """
-test_observability.py — Observability tests covering Section 2.E (Observability) of
-test_strategy.md.
+test_observability.py — Observability tests: log emission, stdout purity, log format,
+log/DB state correlation, and sensitive data checks.
 
 Focus areas:
   OBS-1  Log lines emitted for key events (enqueue, claim, complete, fail, DLQ move,
           recovery, worker start/stop, config change)
   OBS-2  Logs go to stdout of the worker process (not mixed into --json stdout)
-  OBS-3  Log lines contain timestamps and are human-readable
+  OBS-3  Log lines are human-readable text
   OBS-4  Log sequence matches DB state sequence (correlation)
   OBS-5  No sensitive data leaks in logs
 """
@@ -23,12 +23,11 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 
 def cli(args, env, timeout=15):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
@@ -36,7 +35,7 @@ def cli(args, env, timeout=15):
 def worker_proc_capture(env, count=1):
     """Start a worker and capture ALL output (stdout+stderr merged) into a log file."""
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,  # merge stderr into stdout so we capture everything
         text=True,
@@ -143,7 +142,7 @@ def test_obs_list_json_stdout_has_no_worker_log_lines(env):
     """Worker log lines must not appear in list --json stdout."""
     cli(["enqueue", '{"id":"obs-pure","command":"echo hi"}'], env)
     wp = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         env=env,
@@ -167,7 +166,7 @@ def test_obs_dlq_list_json_stdout_is_pure(env):
     cli(["config", "set", "backoff-base", "1"], env)
     cli(["enqueue", '{"id":"obs-dlq","command":"exit 1","max_retries":0}'], env)
     wp = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
     )
     try:
@@ -263,7 +262,7 @@ def test_obs_recovery_log_emitted_for_stale_job(env):
 
     # Start a worker, let it claim the job, then SIGKILL it
     wp1 = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
     )
     wait_state(env, "obs-rec", "processing", timeout=5)
