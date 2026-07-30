@@ -20,6 +20,12 @@ in a single SQLite file (`queue.db` by default, override with the
 `QUEUECTL_DB` environment variable, which is also how the test suite
 isolates each test run).
 
+For development and tests, install the additional tooling:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
 ## Usage
 
 ```bash
@@ -117,8 +123,8 @@ enqueue time** — changing them only affects jobs created afterward. See
 python -m pytest tests/ -v
 ```
 
-The suite is black-box: it shells out to `app.py` exactly as a real user
-(or the grader's script) would, and covers:
+The suite is black-box: it invokes `python -m queuectl` exactly as a real user
+would, and covers:
 
 - a basic job completing
 - a failing job retrying with backoff and landing in the DLQ

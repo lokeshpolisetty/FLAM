@@ -1,7 +1,8 @@
 """
-test_component_missing.py — Component tests covering gaps in Section 2B analysis.
+test_component_worker.py — Component tests for worker loop, signal handling,
+and concurrency safety.
 
-Missing areas addressed:
+Covers:
   - Worker loop with stubbed command execution (verifies finish_job called correctly)
   - Heartbeat thread does not block job execution
   - Worker stops claiming after shutdown flag set
@@ -29,7 +30,6 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
 from queuectl import database as db
 from queuectl.config import settings as config_service
 from queuectl.worker import execute_job, worker_main_loop
@@ -180,7 +180,7 @@ def test_worker_loop_marks_stopped_on_exit(isolated_db, monkeypatch):
     env["QUEUECTL_DB"] = db.connection.DB_PATH
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env
     )
     time.sleep(0.5)
@@ -249,7 +249,7 @@ def test_multiple_rapid_sigterms_only_one_shutdown(tmp_path):
     env["QUEUECTL_DB"] = db_file
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
     )
     time.sleep(0.5)
@@ -278,7 +278,7 @@ def test_sigterm_during_idle_worker_exits_immediately(tmp_path):
     env["QUEUECTL_DB"] = db_file
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env
     )
     time.sleep(0.5)
@@ -570,7 +570,7 @@ def test_parallel_enqueue_20_connections_no_corruption(tmp_path, monkeypatch):
             env = os.environ.copy()
             env["QUEUECTL_DB"] = db_file
             res = subprocess.run(
-                [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue",
+                [sys.executable, "-m", "queuectl"] + ["enqueue",
                  json.dumps({"id": f"par-enq-{i}", "command": f"echo {i}"})],
                 capture_output=True, text=True, env=env, timeout=10
             )
@@ -608,18 +608,18 @@ def test_worker_does_not_claim_after_stop_signal(tmp_path):
 
     # Enqueue a slow job and a fast job after it
     subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue",
+        [sys.executable, "-m", "queuectl"] + ["enqueue",
          json.dumps({"id": "slow-1", "command": "sleep 2"})],
         capture_output=True, env=env
     )
     subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue",
+        [sys.executable, "-m", "queuectl"] + ["enqueue",
          json.dumps({"id": "fast-2", "command": "echo hi"})],
         capture_output=True, env=env
     )
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env
     )
 
