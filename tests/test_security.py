@@ -1,6 +1,5 @@
 """
-test_security.py — Security and input-safety tests covering Section 2.E (Security) of
-test_strategy.md.
+test_security.py — Security and input-safety tests.
 
 Focus areas:
   SEC-1  SQL injection via id and command fields
@@ -24,19 +23,18 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
 
 
 def cli(args, env, timeout=15):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
 
 def worker_proc(env, count=1):
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", str(count)],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
     )
 
@@ -314,7 +312,7 @@ def test_parallel_enqueue_no_corruption(env):
     procs = []
     for i in range(20):
         p = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["enqueue",
+            [sys.executable, "-m", "queuectl"] + ["enqueue",
              json.dumps({"id": f"par-{i}", "command": f"echo {i}"})],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
         )

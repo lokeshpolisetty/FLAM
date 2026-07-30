@@ -33,8 +33,6 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-APP  = ROOT / "-m", "queuectl.cli.entrypoint"
-sys.path.insert(0, str(ROOT))
 
 from queuectl import database as db
 from queuectl.config import settings as config_service
@@ -47,7 +45,7 @@ from queuectl.worker import execute_job
 
 def cli(args, env, timeout=30):
     return subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, timeout=timeout, env=env,
     )
 
@@ -178,7 +176,7 @@ class TestBug2WorkerStopPermissionError:
         """worker stop with PermissionError on os.kill exits 0 and marks stopped."""
         # Start and immediately stop a real worker so its row is in the DB
         proc = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=fresh_env
         )
         time.sleep(0.4)
@@ -219,7 +217,7 @@ class TestBug2WorkerStopPermissionError:
         cli(["enqueue", '{"id":"fast","command":"echo hi"}'], fresh_env)
 
         proc = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=fresh_env
         )
         # Wait until the fast job is done so worker is idle
@@ -364,7 +362,7 @@ class TestBug4HeartbeatAtInJson:
         cli(["enqueue", '{"id":"hb4-proc","command":"sleep 30"}'], fresh_env)
 
         wp = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=fresh_env
         )
         try:
@@ -453,7 +451,7 @@ class TestGap5HeartbeatRecoveryGuard:
         cli(["config", "set", "recovery-timeout", "15"], fresh_env)
 
         proc = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=fresh_env
         )
         time.sleep(0.5)
@@ -549,7 +547,7 @@ class TestGap7LargeStdoutNonBlocking:
         cli(["enqueue", json.dumps({"id": "large-out", "command": cmd})], fresh_env)
 
         wp = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=fresh_env
         )
         try:
@@ -576,7 +574,7 @@ class TestGap7LargeStdoutNonBlocking:
         cli(["enqueue", json.dumps({"id": "large-err", "command": cmd})], fresh_env)
 
         wp = subprocess.Popen(
-            [sys.executable, "-m", "queuectl.cli.entrypoint"] + ["worker", "start", "--count", "1"],
+            [sys.executable, "-m", "queuectl"] + ["worker", "start", "--count", "1"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=fresh_env
         )
         try:
