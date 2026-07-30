@@ -1,19 +1,31 @@
 # Python bytecode and caches
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+.Python
 
 # Virtual environments
 .venv/
 venv/
+env/
 
-# SQLite database files (runtime artifacts)
+# SQLite database files (runtime artifacts — not source)
 *.db
 *.db-shm
 *.db-wal
 
-# Test artifacts
+# Test and coverage artifacts
 .pytest_cache/
 .coverage
+htmlcov/
 
 # macOS metadata
 .DS_Store
+
+# docs/ — one-off dev scripts, AI-generated strategy documents, coverage reports.
+# Preserved locally for reference; not part of the published source tree.
+docs/
+
+# backup/ — compatibility shims and temporary refactoring scripts used during development.
+backup/
