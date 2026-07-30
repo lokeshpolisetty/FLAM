@@ -1,7 +1,9 @@
 """
-test_unit_strategy.py — Unit tests covering Section 2.A of test_strategy.md.
+test_unit_db.py — Unit tests for database layer logic.
 
-Targets pure logic, helper functions, and database functions deterministically.
+Targets pure logic, helper functions, and database functions deterministically:
+state transition rules, backoff calculation, retry boundaries, config
+serialization, and time arithmetic.
 """
 
 import json
@@ -59,14 +61,14 @@ def test_schema_missing_required_fields_cli(tmp_db):
     env["QUEUECTL_DB"] = db.connection.DB_PATH
 
     res_no_id = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "enqueue", json.dumps({"command": "echo hi"})],
+        [sys.executable, "-m", "queuectl", "enqueue", json.dumps({"command": "echo hi"})],
         capture_output=True, text=True, env=env
     )
     assert res_no_id.returncode != 0
     assert "Job JSON must include at least 'id' and 'command'" in res_no_id.stderr
 
     res_no_cmd = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "enqueue", json.dumps({"id": "j1"})],
+        [sys.executable, "-m", "queuectl", "enqueue", json.dumps({"id": "j1"})],
         capture_output=True, text=True, env=env
     )
     assert res_no_cmd.returncode != 0
@@ -264,7 +266,7 @@ def test_dlq_retry_resets_attempts(tmp_db):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "dlq", "retry", "j_dlq"],
+        [sys.executable, "-m", "queuectl", "dlq", "retry", "j_dlq"],
         capture_output=True, text=True, env=env
     )
     assert res.returncode == 0
@@ -285,7 +287,7 @@ def test_dlq_retry_non_dead_job_fails(tmp_db):
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "dlq", "retry", "j_pend"],
+        [sys.executable, "-m", "queuectl", "dlq", "retry", "j_pend"],
         capture_output=True, text=True, env=env
     )
     assert res.returncode != 0
@@ -354,14 +356,14 @@ def test_cli_execution_contract(tmp_db):
     """CLI returns valid status output."""
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
-    res = subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint", "status"], capture_output=True, text=True, env=env)
+    res = subprocess.run([sys.executable, "-m", "queuectl", "status"], capture_output=True, text=True, env=env)
     assert res.returncode == 0
     assert "Job states:" in res.stdout
 
 
 def test_cli_invalid_command():
     """Invalid CLI command returns non-zero exit code."""
-    res = subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint", "unknowncommand"], capture_output=True, text=True)
+    res = subprocess.run([sys.executable, "-m", "queuectl", "unknowncommand"], capture_output=True, text=True)
     assert res.returncode != 0
 
 
@@ -369,6 +371,6 @@ def test_cli_invalid_json_enqueue(tmp_db):
     """Invalid JSON payload to enqueue outputs error to stderr and returns non-zero exit code."""
     env = os.environ.copy()
     env["QUEUECTL_DB"] = db.connection.DB_PATH
-    res = subprocess.run([sys.executable, "-m", "queuectl.cli.entrypoint", "enqueue", "{broken json"], capture_output=True, text=True, env=env)
+    res = subprocess.run([sys.executable, "-m", "queuectl", "enqueue", "{broken json"], capture_output=True, text=True, env=env)
     assert res.returncode != 0
     assert "Invalid JSON" in res.stderr

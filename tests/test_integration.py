@@ -1,7 +1,7 @@
 """
-test_integration_strategy.py — Integration tests covering Section 2.C of test_strategy.md.
+test_integration.py — Integration tests for end-to-end CLI → Storage → Worker → CLI flows.
 
-Exercises CLI -> Storage -> Worker -> CLI complete flows:
+Exercises complete request flows:
 - Enqueue then process
 - Enqueue then fail then retry then succeed
 - Enqueue then fail repeatedly then dead-letter
@@ -33,7 +33,7 @@ def env(tmp_path):
 
 def run_cli(args, env, check=True):
     res = subprocess.run(
-        [sys.executable, "-m", "queuectl.cli.entrypoint"] + args,
+        [sys.executable, "-m", "queuectl"] + args,
         capture_output=True, text=True, env=env
     )
     if check and res.returncode != 0:
@@ -51,7 +51,7 @@ def list_jobs(env, state=None):
 
 def start_worker(env, count=1):
     return subprocess.Popen(
-        [sys.executable, "-m", "queuectl.cli.entrypoint", "worker", "start", "--count", str(count)],
+        [sys.executable, "-m", "queuectl", "worker", "start", "--count", str(count)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         env=env
